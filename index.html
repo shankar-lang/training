@@ -1,10 +1,525 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hiver — Support Playbook</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hiver Support Playbook</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --board:#1e3327;
+    --board2:#274435;
+    --chalk:#eef3ea;
+    --paper:#f1ecdd;
+    --paper-line:#d8cfb0;
+    --ink:#20201a;
+    --muted:#635f4e;
+    --brass:#b8863b;
+    --brass-deep:#8f6425;
+    --sage:#5f7a63;
+    --rust:#a5503a;
+    --shadow:0 22px 40px -18px rgba(20,25,15,.35);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:'Inter',ui-sans-serif,system-ui,sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, #00000006 28px),
+      radial-gradient(circle at 85% -10%, #ffffff 0%, transparent 45%);
+  }
+  .shell{max-width:1220px;margin:auto;padding:40px 30px 90px}
+
+  /* ---------- top bar ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding-bottom:22px;border-bottom:2px solid var(--ink);margin-bottom:56px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:'Fraunces',serif;font-weight:600;font-size:19px}
+  .brand-mark{width:32px;height:32px;border-radius:5px;background:var(--board);color:var(--chalk);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;transform:rotate(-3deg)}
+  .stamp{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.03em;color:var(--muted);border:1px solid var(--paper-line);padding:7px 12px;border-radius:3px}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:34px;padding-bottom:22px;border-bottom:1px solid var(--paper-line)}
+  .search-wrap{position:relative;flex:1;min-width:220px;max-width:380px}
+  .search{width:100%;padding:11px 14px 11px 34px;border:1px solid var(--paper-line);border-radius:4px;background:#fffdf7;font-family:'Inter',sans-serif;font-size:14.5px;outline:none;color:var(--ink)}
+  .search:focus{border-color:var(--brass)}
+  .search-wrap::before{content:"";position:absolute;left:12px;top:50%;transform:translateY(-50%);width:12px;height:12px;border:1.5px solid var(--muted);border-radius:50%}
+  .search-wrap::after{content:"";position:absolute;left:20px;top:15px;width:6px;height:1.5px;background:var(--muted);transform:rotate(45deg)}
+  .tabs{display:flex;gap:4px}
+  .tab{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:9px 14px;border:1px solid transparent;border-radius:4px;background:none;color:var(--muted);cursor:pointer;letter-spacing:.01em}
+  .tab.active{background:var(--ink);color:var(--paper)}
+  .tab:not(.active):hover{border-color:var(--paper-line)}
+
+  /* ---------- grid / cards ---------- */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+  .card-wrap{height:328px;perspective:1400px}
+  .card{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d;cursor:pointer}
+  .card-wrap.flipped .card{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:6px;overflow:hidden}
+
+  .front{
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    padding:24px 24px 20px;
+    display:flex;flex-direction:column;
+    box-shadow:var(--shadow);
+    clip-path:polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 0 100%);
+  }
+  .front::after{
+    content:"";position:absolute;top:0;right:0;width:0;height:0;
+    border-style:solid;border-width:0 26px 26px 0;
+    border-color:transparent var(--board) transparent transparent;
+  }
+  .card-cat{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.05em;color:var(--sage);margin-bottom:14px}
+  .front h2{font-family:'Fraunces',serif;font-weight:600;font-size:22px;line-height:1.15;margin:0 0 10px;letter-spacing:-.01em}
+  .front p{color:var(--muted);font-size:14px;line-height:1.55;margin:0}
+  .flip-hint{margin-top:auto;padding-top:16px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--brass-deep);display:flex;align-items:center;gap:6px}
+  .flip-hint svg{width:13px;height:13px}
+
+  .back{
+    transform:rotateY(180deg);
+    background:var(--board);
+    background-image:radial-gradient(ellipse at top left, #2c4a3a 0%, transparent 60%);
+    color:var(--chalk);
+    padding:22px 24px;
+    display:flex;flex-direction:column;
+  }
+  .back-tag{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.05em;color:#c7a35c;margin-bottom:6px}
+  .back h3{font-family:'Fraunces',serif;font-weight:600;font-size:18.5px;margin:0 0 14px;color:#fff}
+  .route{position:relative;padding-left:22px;flex:1;min-height:0;overflow-y:auto}
+  .route::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:0;border-left:1.5px dashed #6f8a76}
+  .route li{position:relative;list-style:none;font-size:12.6px;line-height:1.5;margin-bottom:11px;color:#dfe8de}
+  .route li::before{content:"";position:absolute;left:-22px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--brass);border:2px solid var(--board)}
+  .tip{margin-top:auto;padding-top:12px;border-top:1px dashed #4a6656;font-size:11.5px;color:#a9c2ad;font-style:italic}
+  .expand-btn{margin-top:10px;padding-top:10px;border-top:1px dashed #4a6656;background:none;border-left:none;border-right:none;border-bottom:none;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.03em;color:#c7a35c;cursor:pointer;text-align:left;width:100%}
+  .expand-btn:hover{color:#e0bd7c}
+
+  .card-wrap.expanded{height:auto}
+  .card-wrap.expanded .card{height:auto;transform:none !important}
+  .card-wrap.expanded .face{position:relative;inset:auto;backface-visibility:visible}
+  .card-wrap.expanded .front{display:none}
+  .card-wrap.expanded .back{transform:none}
+  .card-wrap.expanded .route{overflow-y:visible;max-height:none}
+
+  .empty{display:none;text-align:center;padding:70px 20px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:13px}
+
+  .footer{margin-top:70px;padding-top:22px;border-top:2px solid var(--ink);display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted)}
+
+  @media(max-width:980px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:640px){
+    .grid{grid-template-columns:1fr}
+    .card-wrap{height:auto}
+    .front, .back{position:relative;inset:auto}
+    .card-wrap .card{transform:none !important;height:auto}
+    .face{position:relative;backface-visibility:visible}
+    .back{display:none}
+    .card-wrap.flipped .back{display:flex}
+    .card-wrap.flipped .front{display:none}
+    .footer{display:block}
+    .footer span{display:block;margin:5px 0}
+  }
+</style>
 </head>
 <body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="brand"><div class="brand-mark">H</div> Hiver — Support Playbook</div>
+    <div class="stamp">INTERNAL / SUPPORT OPS</div>
+  </div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <input class="search" id="search" placeholder="Search plays…">
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-filter="all">All plays</button>
+      <button class="tab" data-filter="conversation">Conversations</button>
+      <button class="tab" data-filter="workflow">Workflows</button>
+      <button class="tab" data-filter="escalation">Escalations</button>
+    </div>
+  </div>
+
+  <main class="grid" id="grid">
+
+    <div class="card-wrap" data-cat="conversation" data-title="Permalink issue">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">CONVERSATION · PERMALINK</div>
+          <h2>Permalink Issue</h2>
+          <p>A conversation permalink doesn't open, or opens the wrong thread.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <div class="back-tag">SETUP</div>
+          <h3>Check Access & Refresh</h3>
+          <ol class="route">
+            <li>Check whether it's a Private or Public permalink.</li>
+            <li>Confirm who's accessing it — are they part of the inbox or not?</li>
+            <li>Log out and log back in.</li>
+            <li>Check the auth status.</li>
+            <li>Refresh the screen.</li>
+            <li>Clear cookies and cache.</li>
+          </ol>
+          <div class="tip">Most permalink issues trace back to access — not the link itself.</div>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="Hiver extension not loading">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · EXTENSION</div>
+          <h2>Extension Isn't Loading</h2>
+          <p>The Hiver Chrome extension won't load inside Gmail.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <div class="back-tag">SETUP</div>
+          <h3>Reset the Extension</h3>
+          <ol class="route">
+            <li>Ask when the issue started.</li>
+            <li>Refresh Gmail.</li>
+            <li>Do a hard refresh.</li>
+            <li>Clear cookies and cache.</li>
+            <li>Check the Chrome version, or update Chrome.</li>
+            <li>Uninstall and reinstall the extension from the Chrome Web Store.</li>
+            <li>Try a new Chrome profile.</li>
+            <li>Check internet connection, VPN, and DNS; try changing DNS to Google.</li>
+            <li>Check for conflicting extensions and third-party applications.</li>
+            <li>Check browser security settings (Brave, DuckDuckGo, etc.).</li>
+            <li>Still unresolved? Collect network logs, Chrome version, and console logs, then escalate.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="User email address update">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · ACCOUNT</div>
+          <h2>User Email Address Update</h2>
+          <p>A user's email address has changed and their Hiver account needs to move with it.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <h3>User email update - HIG</h3>
+          <ol class="route">
+            <li>Update the old email address to the new one in Google Workspace (e.g. old.email@company.com → new.email@company.com).</li>
+            <li>Email Hiver Support confirming the Google Workspace update, with the Hiver Admin in CC.</li>
+            <li>Hiver Support updates the account on their end.</li>
+            <li>Log out of Hiver and log back in with the new email address.</li>
+            <li>All existing Hiver data, settings, and history remain unchanged.</li>
+          </ol>
+          <div class="tip">Google Workspace must be updated first — Hiver Support can't update ahead of it.</div>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="Emails in inbox">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · INBOX</div>
+          <h2>Emails in Inbox</h2>
+          <p>An email is showing up in the shared inbox that a customer says shouldn't be there — or vice versa.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <h3>Trace the Delivery Path</h3>
+          <ol class="route">
+            <li>Note the shared inbox name (group or user).</li>
+            <li>Identify the impacted user.</li>
+            <li>Check the Copy to Inbox setting — the assigned user will also get the email in their own inbox.</li>
+            <li>Check whether the email is inbound, outbound, or manually added.</li>
+            <li>Check From, To, CC, and BCC for any mailing list addresses.</li>
+            <li>Check if the affected user's email is in To, CC, BCC, or part of a mailing list.</li>
+            <li>Check filters and forwarding.</li>
+            <li>Check aliases.</li>
+            <li>Check filters for "Never mark as spam" or "Skip Inbox" — enabled or missing.</li>
+            <li>Check thread analysis and look for the Inbox label.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="Duplicate trial account">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · ACCOUNT</div>
+          <h2>Duplicate Trial Account</h2>
+          <p>A customer ends up with more than one trial account and needs to consolidate to one.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <h3>Consolidate the Account</h3>
+          <ol class="route">
+            <li>Identify the duplicate account.</li>
+            <li>Confirm the intended account the customer wants to use.</li>
+            <li>Delete the duplicate account.</li>
+            <li>Refresh Gmail and sign in with the intended account.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="My sent error">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · SENDER SETTINGS</div>
+          <h2>My Sent Error</h2>
+          <p>Customer sees an error related to My Sent, or emails aren't sending as the expected address.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <h3>Verify the Sender</h3>
+          <ol class="route">
+            <li>Ask for a full-page screenshot showing the issue.</li>
+            <li>Check whether an error message appears.</li>
+            <li>Check Sender Settings under My Settings.</li>
+            <li>Go to Gmail Settings → Accounts → Send mail as.</li>
+            <li>Ensure the name and email address in Send mail as match My Sent under My Settings.</li>
+            <li>Check the relevant sender/verification setting.</li>
+            <li>Click Verify if available.</li>
+            <li>Refresh the page and test again.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="Email sync group type">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · EMAIL SYNC</div>
+          <h2>Email Sync - Group Type</h2>
+          <p>Emails sent to a Google Group aren't syncing correctly into Hiver.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <h3>Trace the Group Sync</h3>
+          <ol class="route">
+            <li>Identify the source user associated with the Google Group and check their authentication status in Grexit Admin.</li>
+            <li>Check authentication status: Source = -1 means the source user isn't authenticated; Source = -0 means check the Google Group settings.</li>
+            <li>Ask the customer to log in at group.google.com and verify the group settings are configured correctly.</li>
+            <li>Verify the subscription status of the source email address in Google Groups, for each relevant address.</li>
+            <li>Send a test email to the Google Group and confirm whether it's delivered to the source user's Gmail inbox.</li>
+            <li>Run a thread-level analysis to see where the flow breaks — did it reach the source user, and was it then processed by Hiver?</li>
+            <li>If the source user isn't receiving the email, check Gmail forwarding settings and filters that may be moving, deleting, or otherwise affecting it.</li>
+            <li>If all checks above pass, try changing the source user to another authenticated group member and send another test email.</li>
+            <li>Escalate if the source user receives the email, authentication and group settings are correct, no forwarding/filters interfere, changing the source user doesn't help, and it's still not syncing.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="Auth status in grexit admin">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · AUTH STATUS</div>
+          <h2>Auth Status in Grexit Admin</h2>
+          <p>Reference for reading a user's authentication status in Grexit Admin.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <h3>The 3 Auth Statuses</h3>
+          <ol class="route">
+            <li>0: User is logged in Hiver.</li>
+            <li>-1: User is logged out of Hiver.</li>
+            <li>-2: User has removed Hiver and revoked Hiver's access, and we have lost all authentication.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="RLE rate limit error">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · RLE</div>
+          <h2>RLE</h2>
+          <p>Rate Limit Error — a Gmail-side limit that stops sync, status changes, and API calls.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <h3>Check & Communicate</h3>
+          <ol class="route">
+            <li>RLE stands for Rate Limit Error, applied by Gmail.</li>
+            <li>If RLE is hit: sync won't work, status won't change, and API calls won't happen.</li>
+            <li>To check if RLE was hit in the last 24 hours, go to Grexit Admin → Users → RLE.</li>
+            <li>If RLE was hit in the last 24 hours, the system will recover on its own — tell the CX it was hit and is recovering.</li>
+            <li>If RLE shows red in the GA column, inform the CX it's been hit and will regulate within 24 hours.</li>
+            <li>The rate limit is managed by Gmail — the system regulates and recovers automatically once the limit resets.</li>
+          </ol>
+          <div class="tip">"I completely understand how important it is to have your emails syncing smoothly, especially when you rely on Hiver for your day-to-day communication. Since this rate limit is controlled by Gmail, it will automatically reset within the next 24 hours, after which the email sync will resume normally. At this point, the best course is to allow Gmail's rate limit to reset, and the system will recover automatically once that happens."</div>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="Email in trash">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · TRASH</div>
+          <h2>Email in Trash</h2>
+          <p>An email has ended up in Trash and the customer wants to know why.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <h3>Trace the Trash Action</h3>
+          <ol class="route">
+            <li>Ask the CX for the Message ID.</li>
+            <li>Check if the Trash label is applied in Thread Analysis.</li>
+            <li>Check for any filters in the source user's account.</li>
+            <li>It can also be a manual action by the user.</li>
+            <li>Ask for a screenshot of the activity panel.</li>
+            <li>Suggest the CX configure the Remove Conversation Log Report to monitor trash actions.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="Email sync delay">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · EMAIL SYNC</div>
+          <h2>Email Sync - Delay</h2>
+          <p>Emails are syncing later than expected and you need to find out where the delay is coming from.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <h3>Locate the Delay</h3>
+          <ol class="route">
+            <li>Email sync delay can be caused by either Hiver or Gmail.</li>
+            <li>Gather the impacted Thread ID.</li>
+            <li>Check the email header in Google Toolbox (toolbox.googleapps.com/apps/messageheader/analyzeheader).</li>
+            <li>300342089616 is Hiver's ID.</li>
+            <li>If the delay is before this ID, it's from Gmail. If it's after this ID, it's from Hiver.</li>
+            <li>If the CX is reporting a live delay, send a test email and wait for it to sync.</li>
+            <li>Check the timestamps and determine the delay based on them.</li>
+            <li>Escalate accordingly.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="Email sync user type">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · EMAIL SYNC</div>
+          <h2>Email Sync - User Type</h2>
+          <p>Checking whether an email has synced, and troubleshooting when it hasn't.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <h3>Check & Trace the Sync</h3>
+          <ol class="route">
+            <li>To check if it synced: send a test email to the shared mailbox.</li>
+            <li>Run the Thread Analysis (TA).</li>
+            <li>If the labels are applied, the email has synced.</li>
+            <li>Check the details under Other Details in TA.</li>
+            <li>If sync isn't working, check the Auth Status in Grexit Admin.</li>
+            <li>Ask the CX if the email is being received in the root account.</li>
+            <li>If it's still not received, redirect the CX to Gmail and explain that emails aren't received in the Gmail account itself.</li>
+            <li>If it IS received in the root account: revoke the shared mailbox's authentication, have the user log in again, and check for third-party apps/extensions — escalate if it continues.</li>
+            <li>If it's NOT received in the root account: check Gmail filters, check Spam and Trash, and check the RLE status.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+
+    <div class="card-wrap" data-cat="workflow" data-title="Email sync alias">
+      <div class="card">
+        <article class="face front">
+          <div class="card-cat">WORKFLOW · EMAIL SYNC</div>
+          <h2>Email Sync - Alias</h2>
+          <p>An alias address isn't syncing correctly to the shared mailbox.</p>
+          <div class="flip-hint">RUN THE PLAY →</div>
+        </article>
+        <article class="face back">
+          <h3>Trace the Alias Flow</h3>
+          <ol class="route">
+            <li>Gather the Thread ID and run the Thread Analysis (TA).</li>
+            <li>Check if the source user has received the email, and check the source user in Grexit Admin.</li>
+            <li>Send a test email to the alias and check if the source user receives it.</li>
+            <li>Verify the alias is declared in both Gmail and Hiver (e.g. Support@xyz is the SM/source user, Saleena@abc is the alias — mail to Saleena@abc should land at Support@xyz, then sync to the shared mailbox).</li>
+            <li>If the source user does NOT receive the email: check RLE status, authentication status, Gmail filters, and Spam/Trash — redirect the CX to Gmail if everything checks out and it's still not arriving.</li>
+            <li>If the source user IS receiving the email but it's not syncing to the shared mailbox: gather the Message ID, check for third-party apps/extensions, and escalate with the Message ID and all relevant details.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="empty" id="empty">No plays match that search.</div>
+
+  <div class="footer">
+    <span>Hiver Support Playbook — internal use only</span>
+    <span>Click any card to flip · search to find a play</span>
+  </div>
+</div>
+
+<script>
+const wraps=[...document.querySelectorAll('.card-wrap')];
+const search=document.getElementById('search');
+const tabs=[...document.querySelectorAll('.tab')];
+const empty=document.getElementById('empty');
+let active='all';
+
+wraps.forEach(w=>w.addEventListener('click',()=>{
+  const wasFlipped=w.classList.contains('flipped');
+  wraps.forEach(x=>{x.classList.remove('flipped');x.classList.remove('expanded');});
+  if(!wasFlipped) w.classList.add('flipped');
+  setTimeout(setupExpandButtons,50);
+}));
+
+function setupExpandButtons(){
+  wraps.forEach(w=>{
+    const back=w.querySelector('.back');
+    const route=w.querySelector('.route');
+    if(!back||!route) return;
+    let btn=back.querySelector('.expand-btn');
+    const overflowing=route.scrollHeight>route.clientHeight+2;
+    if(overflowing&&!btn){
+      btn=document.createElement('button');
+      btn.type='button';
+      btn.className='expand-btn';
+      btn.textContent='Show full list ↓';
+      back.appendChild(btn);
+      btn.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        const isExpanded=w.classList.toggle('expanded');
+        btn.textContent=isExpanded?'Collapse ↑':'Show full list ↓';
+      });
+    } else if(!overflowing&&btn){
+      btn.remove();
+    }
+  });
+}
+window.addEventListener('load',setupExpandButtons);
+window.addEventListener('resize',setupExpandButtons);
+if(document.fonts&&document.fonts.ready){document.fonts.ready.then(setupExpandButtons);}
+
+function render(){
+  const q=search.value.toLowerCase().trim();
+  let count=0;
+  wraps.forEach(w=>{
+    const okCat=active==='all'||w.dataset.cat===active;
+    const okText=!q||w.dataset.title.toLowerCase().includes(q)||w.innerText.toLowerCase().includes(q);
+    const show=okCat&&okText;
+    w.style.display=show?'block':'none';
+    if(show) count++;
+  });
+  empty.style.display=count?'none':'block';
+}
+tabs.forEach(btn=>btn.addEventListener('click',()=>{
+  tabs.forEach(x=>x.classList.remove('active'));
+  btn.classList.add('active');
+  active=btn.dataset.filter;
+  render();
+}));
+search.addEventListener('input',render);
+</script>
 </body>
 </html>
